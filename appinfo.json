@@ -1,0 +1,53 @@
+{
+  "uuid": "e2b746cb-b4bb-46e5-bbe2-ad5287a9fb29",
+  "shortName": "Swim Counter",
+  "longName": "Swim Counter",
+  "companyName": "CW Software",
+  "versionCode": 1,
+  "versionLabel": "1.0.0",
+  "watchapp": {
+    "watchface": false
+  },
+  "appKeys": {
+    "dummy": 0
+  },
+  "resources": {
+    "media": [
+      {
+        "type": "png",
+        "name": "IMAGE_ACTION_UP",
+        "file": "img/icon_up.png"
+      },
+      {
+        "type": "png",
+        "name": "IMAGE_ACTION_DOWN",
+        "file": "img/icon_down.png"
+      },
+      {
+        "type": "png",
+        "name": "IMAGE_ACTION_CHANGE_STROKE",
+        "file": "img/icon_stroke.png"
+      },
+      {
+        "type": "png",
+        "name": "IMAGE_STROKE_BACK",
+        "file": "img/icon_stroke_back.png"
+      },
+      {
+        "type": "png",
+        "name": "IMAGE_STROKE_BREAST",
+        "file": "img/icon_stroke_breast.png"
+      },
+      {
+        "type": "png",
+        "name": "IMAGE_STROKE_BUTTERFLY",
+        "file": "img/icon_stroke_butterfly.png"
+      },
+      {
+        "type": "png",
+        "name": "IMAGE_STROKE_FREESTYLE",
+        "file": "img/icon_stroke_freestyle.png"
+      }
+    ]
+  }
+}
