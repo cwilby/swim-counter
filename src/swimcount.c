@@ -182,44 +182,59 @@ static void change_stroke(uint32_t stroke_id) {
   update_stroke_text(stroke_data);
 }
 
+static void begin_counting() {
+  b_stroke_selected = true;
+  init_stroke_layers();
+  change_stroke(0);
+}
 
 static void select_click_handler(ClickRecognizerRef recognizer, void *context) {
   if(b_stroke_selected) {
     change_stroke(i_current_stroke + 1);
   } else {
-    b_stroke_selected = true;
-    init_stroke_layers();
-    change_stroke(0);
+    begin_counting();   
   }
 }
 static void up_click_handler(ClickRecognizerRef recognizer, void *context) {
-  StrokeData *stroke_data = &s_stroke_datas[i_current_stroke];
+  if(b_stroke_selected) {
+    StrokeData *stroke_data = &s_stroke_datas[i_current_stroke];
 
-  if(stroke_data->count == 500) {
-    vibes_short_pulse();
+    if(stroke_data->count == 500) {
+      vibes_short_pulse();
+    } else {
+      stroke_data->count++;
+      update_stroke_text(stroke_data);  
+    }
   } else {
-    stroke_data->count++;
-    update_stroke_text(stroke_data);  
+    begin_counting();
   }
 }
 static void down_click_handler(ClickRecognizerRef recognizer, void *context) {
-  StrokeData *stroke_data = &s_stroke_datas[i_current_stroke];
+  if(b_stroke_selected) {
+    StrokeData *stroke_data = &s_stroke_datas[i_current_stroke];
 
-  if(stroke_data->count == 0) {
-    vibes_short_pulse();
+    if(stroke_data->count == 0) {
+      vibes_short_pulse();
+    } else {
+      stroke_data->count--;
+      update_stroke_text(stroke_data);  
+    }
   } else {
-    stroke_data->count--;
-    update_stroke_text(stroke_data);  
+    begin_counting();
   }
 }
 static void select_long_click_handler(ClickRecognizerRef recognizer, void *context) {
-  for(int i = 0; i < 4; i++) {
-    StrokeData *stroke_data = &s_stroke_datas[i];
-    stroke_data->count = 0;
-  }
+  if(b_stroke_selected) {
+    for(int i = 0; i < 4; i++) {
+      StrokeData *stroke_data = &s_stroke_datas[i];
+      stroke_data->count = 0;
+    }
 
-  StrokeData *current_stroke = &s_stroke_datas[i_current_stroke];
-  update_stroke_text(current_stroke);
+    StrokeData *current_stroke = &s_stroke_datas[i_current_stroke];
+    update_stroke_text(current_stroke);
+  } else {
+    begin_counting();
+  }
 }
 
 static void click_config_provider(void *context) {
