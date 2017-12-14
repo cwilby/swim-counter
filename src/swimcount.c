@@ -1,6 +1,6 @@
 #include <pebble.h>
 
-// persistence keys
+// app constants
 #define STROKE_SELECTED 0
 #define CURRENT_STROKE 1
 #define BACKSTROKE_LENGTH_COUNT 2
@@ -8,7 +8,38 @@
 #define BUTTERFLY_LENGTH_COUNT 4
 #define FREESTYLE_LENGTH_COUNT 5
 
-// hack
+// a struct used to store information about a stroke
+typedef struct {
+  GBitmap *bitmap;
+  char* text;
+  int count;
+} StrokeData;
+
+// app resources
+static const int RESOURCE_IDS[7] = {
+  RESOURCE_ID_IMAGE_ACTION_UP,
+  RESOURCE_ID_IMAGE_ACTION_DOWN,
+  RESOURCE_ID_IMAGE_ACTION_CHANGE_STROKE,
+  RESOURCE_ID_IMAGE_STROKE_BACK,
+  RESOURCE_ID_IMAGE_STROKE_BREAST,
+  RESOURCE_ID_IMAGE_STROKE_BUTTERFLY,
+  RESOURCE_ID_IMAGE_STROKE_FREESTYLE
+};
+
+// global variables
+static StrokeData s_stroke_datas[4];
+static uint32_t i_current_stroke;
+static bool b_stroke_selected;
+static Window *window;
+static ActionBarLayer *action_bar_layer;
+static TextLayer *intro_up_help;
+static TextLayer *intro_select_help;
+static TextLayer *intro_down_help;
+static BitmapLayer *stroke_image_layer;
+static TextLayer *stroke_name_layer;
+static TextLayer *stroke_count_layer;
+
+// itoa not available in C, only available in C++
 char *itoa(int num)
 {
   static char buff[15] = {};
@@ -33,44 +64,14 @@ char *itoa(int num)
     buff[i] = '\0'; // can't forget the null byte to properly end our string
   }
   else
+  {
     return "Unsupported Number";
+  }
   
   return string;
 }
-// hack
 
-static const int RESOURCE_IDS[7] = {
-  RESOURCE_ID_IMAGE_ACTION_UP,
-  RESOURCE_ID_IMAGE_ACTION_DOWN,
-  RESOURCE_ID_IMAGE_ACTION_CHANGE_STROKE,
-  RESOURCE_ID_IMAGE_STROKE_BACK,
-  RESOURCE_ID_IMAGE_STROKE_BREAST,
-  RESOURCE_ID_IMAGE_STROKE_BUTTERFLY,
-  RESOURCE_ID_IMAGE_STROKE_FREESTYLE
-};
-
-typedef struct {
-  GBitmap *bitmap;
-  char* text;
-  int count;
-} StrokeData;
-
-static StrokeData s_stroke_datas[4];
-static uint32_t i_current_stroke;
-static bool b_stroke_selected;
-
-static Window *window;
-static ActionBarLayer *action_bar_layer;
-
-static TextLayer *intro_up_help;
-static TextLayer *intro_select_help;
-static TextLayer *intro_down_help;
-
-static BitmapLayer *stroke_image_layer;
-static TextLayer *stroke_name_layer;
-static TextLayer *stroke_count_layer;
-
-
+// initialize intro state
 static void init_intro_layers() {
   intro_up_help = text_layer_create(GRect(0, 19, 120, 20));
   layer_add_child(window_get_root_layer(window), text_layer_get_layer(intro_up_help));
@@ -90,6 +91,7 @@ static void init_intro_layers() {
   text_layer_set_text_alignment(intro_down_help, GTextAlignmentCenter);  
 }
 
+// initialize app state based on i_current_stroke.
 static void init_stroke_layers() {
   StrokeData *stroke_data = &s_stroke_datas[i_current_stroke];
 
@@ -114,6 +116,8 @@ static void init_stroke_layers() {
   layer_add_child(window_get_root_layer(window), text_layer_get_layer(stroke_name_layer));
   layer_add_child(window_get_root_layer(window), text_layer_get_layer(stroke_count_layer));
 }
+
+// init state on app open
 static void init_stroke_datas(Window *window) {
   for(int i = 0; i < 4; i++) {
     StrokeData *stroke_data = &s_stroke_datas[i];
@@ -141,6 +145,8 @@ static void init_stroke_datas(Window *window) {
     }
   }
 }
+
+// deinit state on app close
 static void deinit_stroke_datas(void) {
   for(int i = 0; i < 4; i++) {
     StrokeData *stroke_data = &s_stroke_datas[i];
@@ -163,6 +169,8 @@ static void deinit_stroke_datas(void) {
     gbitmap_destroy(stroke_data->bitmap);
   }
 }
+
+// utility functions
 static void update_stroke_text(StrokeData *stroke_data) {
   if(stroke_data->count == 0) {
     text_layer_set_text(stroke_count_layer, "0");
@@ -181,13 +189,13 @@ static void change_stroke(uint32_t stroke_id) {
   text_layer_set_text(stroke_name_layer, stroke_data->text);
   update_stroke_text(stroke_data);
 }
-
 static void begin_counting() {
   b_stroke_selected = true;
   init_stroke_layers();
   change_stroke(0);
 }
 
+// event handlers
 static void select_click_handler(ClickRecognizerRef recognizer, void *context) {
   if(b_stroke_selected) {
     change_stroke(i_current_stroke + 1);
@@ -237,12 +245,15 @@ static void select_long_click_handler(ClickRecognizerRef recognizer, void *conte
   }
 }
 
+// binds events to handlers
 static void click_config_provider(void *context) {
   window_single_click_subscribe(BUTTON_ID_SELECT, select_click_handler);
   window_single_click_subscribe(BUTTON_ID_UP, up_click_handler);
   window_single_click_subscribe(BUTTON_ID_DOWN, down_click_handler);
   window_long_click_subscribe(BUTTON_ID_SELECT, 0, select_long_click_handler, NULL);
 }
+
+// initializes action bar
 static void action_bar_init(Window *window) {
   GBitmap *add_icon = gbitmap_create_with_resource(RESOURCE_IDS[0]);
   GBitmap *subtract_icon = gbitmap_create_with_resource(RESOURCE_IDS[1]);
@@ -256,6 +267,7 @@ static void action_bar_init(Window *window) {
   action_bar_layer_set_icon(action_bar_layer, BUTTON_ID_DOWN, subtract_icon);
 }
 
+// pebble event handlers
 static void on_window_load(Window *window) {
   init_stroke_datas(window);
   action_bar_init(window);
@@ -300,6 +312,7 @@ static void deinit(void) {
   window_destroy(window);
 }
 
+// oh, main.
 int main(void) {
   init();
 
